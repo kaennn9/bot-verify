@@ -269,5 +269,3 @@ python3 bot_fixed.py
 
 ---
 
-**صنع بواسطة Claude** 🤖
-**النسخة:** 2.2 Optional Features
