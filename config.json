@@ -1,0 +1,58 @@
+{
+    "bot": {
+        "token": "",
+        "prefix": "!",
+        "verified_role_name": "Verified",
+        "status": "watching verification requests"
+    },
+    "web_server": {
+        "host": "0.0.0.0",
+        "port": 3000,
+        "debug": false,
+        "secret_key": "Dk4Mjk5MjU5MDY3MTk4Ng.G5BtMg.Go6d0z",
+        "domain": "http://localhost:3000"
+    },
+    "database": {
+        "file": "database.json",
+        "backup_interval_hours": 24,
+        "cleanup_interval_minutes": 5
+    },
+    "security": {
+        "code_expiry_minutes": 10,
+        "max_attempts": 3,
+        "min_account_age_days": 0,
+        "block_alts": true,
+        "block_vpns": false,
+        "block_proxies": false,
+        "max_requests_per_minute": 30,
+        "captcha_enabled": true,
+        "fingerprint_salt": "Dk4Mjk5MjU5MDY3Tk4gkitikmgcwdNg.G5BtMg.Go6d0z"
+    },
+    "verification": {
+        "auto_assign_role": true,
+        "send_dm_confirmation": true,
+        "require_captcha": false,
+        "captcha_difficulty": "medium"
+    },
+    "api_keys": {
+        "vpnapi_io": "",
+        "cloudflare_secret": "",
+        "ipquality_score": "",
+        "maxmind_geoip": ""
+    },
+    "embeds": {
+        "colors": {
+            "success": 3066993,
+            "error": 15158332,
+            "info": 3447003,
+            "warning": 16776960
+        },
+        "footer_text": "Protected by Double Counter"
+    },
+    "logging": {
+        "enabled": true,
+        "log_file": "logs/verification.log",
+        "log_level": "INFO",
+        "webhook_url": ""
+    }
+}

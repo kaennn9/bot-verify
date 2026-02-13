@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification Successful - Double Counter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(16,185,129,0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 600px;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            border-radius: 24px;
+            border: 1px solid rgba(16,185,129,0.3);
+            padding: 3rem 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .success-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            box-shadow: 0 20px 40px rgba(16,185,129,0.4);
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        .success-icon i {
+            font-size: 60px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            animation: fadeInUp 0.6s ease-out 0.4s both;
+        }
+
+        .info-box {
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            animation: fadeInUp 0.6s ease-out 0.6s both;
+        }
+
+        .info-box p {
+            color: #6ee7b7;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        .info-box i {
+            margin-right: 0.5rem;
+        }
+
+        .close-btn {
+            margin-top: 2rem;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: rgba(30,41,59,0.6);
+            color: #e2e8f0;
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            animation: fadeInUp 0.6s ease-out 0.8s both;
+        }
+
+        .close-btn:hover {
+            background: rgba(99,102,241,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99,102,241,0.3);
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            position: absolute;
+            animation: confetti-fall 3s linear infinite;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        
+        <h1>Verification Successful!</h1>
+        
+        <p class="message">
+            You have been successfully verified and granted access to the server.
+        </p>
+        
+        <div class="info-box">
+            <p><i class="fas fa-shield-check"></i> Your account has been verified</p>
+            <p><i class="fas fa-user-check"></i> Verified role has been assigned</p>
+            <p><i class="fas fa-lock"></i> Your session is secure</p>
+        </div>
+        
+        <button class="close-btn" onclick="window.close()">
+            <i class="fas fa-times-circle"></i> Close This Page
+        </button>
+    </div>
+
+    <script>
+        // Create confetti effect
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.animationDelay = Math.random() * 3 + 's';
+                    confetti.style.background = ['#10b981', '#6366f1', '#8b5cf6', '#f59e0b'][Math.floor(Math.random() * 4)];
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 30);
+            }
+        }
+        
+        createConfetti();
+    </script>
+</body>
+</html>

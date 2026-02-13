@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Verification - Double Counter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@3/dist/fp.min.js"></script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3vh 5vw;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(99,102,241,0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 720px;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            border: 1px solid rgba(99,102,241,0.18);
+            padding: 2.8rem 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.2rem;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.2rem;
+            box-shadow: 0 12px 30px rgba(99,102,241,0.4);
+        }
+
+        .logo i {
+            font-size: 38px;
+            color: white;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 5vw, 2.4rem);
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 0.6rem;
+        }
+
+        .server-name {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: rgba(99,102,241,0.15);
+            padding: 0.5rem 1.2rem;
+            border-radius: 50px;
+            font-size: 1.05rem;
+            color: #a5b4fc;
+            margin-bottom: 0.8rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            background: rgba(30, 41, 59, 0.6);
+            padding: 1.2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(99,102,241,0.2);
+            margin-bottom: 2rem;
+        }
+
+        .avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #6366f1;
+        }
+
+        .user-details {
+            flex: 1;
+            text-align: left;
+        }
+
+        .username {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 0.3rem;
+        }
+
+        .user-id {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            font-family: monospace;
+        }
+
+        .security-checks {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .check-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            border: 1px solid rgba(226,232,240,0.1);
+            transition: all 0.25s;
+        }
+
+        .check-item.passed {
+            border-color: #10b981;
+            background: rgba(16,185,129,0.08);
+        }
+
+        .check-item.failed {
+            border-color: #ef4444;
+            background: rgba(239,68,68,0.08);
+        }
+
+        .check-icon {
+            width: 42px;
+            height: 42px;
+            background: rgba(226,232,240,0.08);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: #94a3b8;
+        }
+
+        .check-item.passed .check-icon { background: #10b981; color: white; }
+        .check-item.failed .check-icon { background: #ef4444; color: white; }
+
+        .challenge-box {
+            background: rgba(245,158,11,0.08);
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 16px;
+            padding: 1.6rem;
+            margin: 1.5rem 0;
+            text-align: center;
+            display: none;
+        }
+
+        .challenge-text {
+            color: #fbbf24;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+        }
+
+        .cf-turnstile {
+            display: inline-block;
+        }
+
+        .verify-btn {
+            width: 100%;
+            padding: 1.3rem;
+            font-size: 1.15rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(99,102,241,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            margin-top: 1.8rem;
+        }
+
+        .verify-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 40px rgba(99,102,241,0.5);
+        }
+
+        .verify-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 1.8rem;
+            padding: 1rem 1.4rem;
+            border-radius: 12px;
+            font-weight: 500;
+            text-align: center;
+            display: none;
+        }
+
+        .status.success { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid #10b98144; }
+        .status.error   { background: rgba(239,68,68,0.15);  color: #fca5a5;  border: 1px solid #ef444444; }
+
+        .security-badges {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.8rem;
+            margin-top: 2.5rem;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .badge {
+            background: rgba(30,41,59,0.6);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            border: 1px solid rgba(99,102,241,0.15);
+        }
+
+        @media (max-width: 600px) {
+            .security-checks {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 2rem 1.4rem;
+            }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo"><i class="fas fa-shield-alt"></i></div>
+            <h1>Verification Required</h1>
+            <div class="server-name" id="serverName"><i class="fas fa-server"></i><span>Loading...</span></div>
+        </div>
+
+        <div class="user-info">
+            <img src="" alt="Avatar" class="avatar" id="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+            <div class="user-details">
+                <div class="username" id="username">Loading...</div>
+                <div class="user-id" id="userId"><i class="fas fa-fingerprint"></i> ID: ...</div>
+            </div>
+        </div>
+
+        <div class="security-checks">
+            <div class="check-item" id="ipCheck">
+                <div class="check-icon"><i class="fas fa-network-wired"></i></div>
+                <span>Checking IP reputation...</span>
+            </div>
+            <div class="check-item" id="vpnCheck">
+                <div class="check-icon"><i class="fas fa-user-secret"></i></div>
+                <span>Detecting VPN/Proxy...</span>
+            </div>
+            <div class="check-item" id="browserCheck">
+                <div class="check-icon"><i class="fas fa-globe"></i></div>
+                <span>Analyzing browser...</span>
+            </div>
+            <div class="check-item" id="fingerprintCheck">
+                <div class="check-icon"><i class="fas fa-fingerprint"></i></div>
+                <span>Generating fingerprint...</span>
+            </div>
+        </div>
+
+        <div class="challenge-box" id="challengeBox">
+            <p class="challenge-text"><i class="fas fa-lock"></i> Complete the security challenge:</p>
+            <div id="turnstileContainer"></div>
+        </div>
+
+        <form id="verifyForm">
+            <input type="hidden" id="token" value="">
+            <input type="hidden" id="fingerprint" value="">
+            <input type="hidden" id="captcha_token" value="">
+
+            <button type="submit" class="verify-btn" id="submitBtn" disabled>
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Initializing security checks...</span>
+            </button>
+        </form>
+
+        <div class="status" id="status"></div>
+
+        <div class="security-badges">
+            <div class="badge"><i class="fas fa-lock"></i> SSL Secured</div>
+            <div class="badge"><i class="fas fa-user-shield"></i> VPN Protection</div>
+            <div class="badge"><i class="fas fa-robot"></i> Bot Protection</div>
+            <div class="badge"><i class="fas fa-shield-alt"></i> Double Counter</div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('t');
+        
+        if (!token) {
+            window.location.href = '/failed.html';
+        }
+
+        document.getElementById('token').value = token;
+
+        let fpHash = '';
+        let captchaToken = '';
+        let allChecksComplete = false;
+        let turnstileLoaded = false;
+        let turnstileWidget = null;
+
+        // Cloudflare Turnstile callback
+        window.onTurnstileLoad = function() {
+            turnstileLoaded = true;
+            console.log('Turnstile loaded');
+        };
+
+        window.onCaptchaSuccess = function(captchaResponse) {
+            console.log('CAPTCHA solved');
+            captchaToken = captchaResponse;
+            document.getElementById('captcha_token').value = captchaResponse;
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-shield-alt"></i> Verify Identity';
+        };
+
+        async function loadUserData() {
+            try {
+                const response = await fetch(`/api/check/${token}`);
+                const data = await response.json();
+                if (data.found) {
+                    document.getElementById('username').textContent = data.username;
+                    document.getElementById('userId').innerHTML = `<i class="fas fa-fingerprint"></i> ID: ${data.user_id}`;
+                    document.getElementById('avatar').src = data.avatar_url;
+                    document.getElementById('serverName').innerHTML = `<i class="fas fa-server"></i> ${data.server}`;
+                } else {
+                    window.location.href = '/failed.html';
+                }
+            } catch (e) {
+                console.error('Load user error:', e);
+                window.location.href = '/failed.html';
+            }
+        }
+
+        async function initFingerprint() {
+            try {
+                const fp = await FingerprintJS.load();
+                const result = await fp.get();
+                fpHash = result.visitorId;
+                document.getElementById('fingerprint').value = fpHash;
+                
+                const el = document.getElementById('fingerprintCheck');
+                el.classList.add('passed');
+                el.querySelector('span').textContent = 'Fingerprint generated';
+                el.querySelector('.check-icon i').className = 'fas fa-check';
+                
+                console.log('Fingerprint generated');
+                checkAllComplete();
+            } catch (e) {
+                console.error('Fingerprint error:', e);
+            }
+        }
+
+        async function checkIPReputation() {
+            try {
+                const res = await fetch('http://ip-api.com/json/?fields=status,message,country,proxy,hosting,query');
+                const data = await res.json();
+                
+                const ipEl = document.getElementById('ipCheck');
+                ipEl.classList.add('passed');
+                ipEl.querySelector('span').textContent = `IP verified (${data.country || '??'})`;
+                ipEl.querySelector('.check-icon i').className = 'fas fa-check';
+
+                const vpnEl = document.getElementById('vpnCheck');
+                if (data.proxy || data.hosting) {
+                    vpnEl.classList.add('failed');
+                    vpnEl.querySelector('span').textContent = 'VPN/Proxy detected';
+                    vpnEl.querySelector('.check-icon i').className = 'fas fa-exclamation-triangle';
+                } else {
+                    vpnEl.classList.add('passed');
+                    vpnEl.querySelector('span').textContent = 'No VPN/Proxy';
+                    vpnEl.querySelector('.check-icon i').className = 'fas fa-check';
+                }
+                
+                console.log('IP checks complete');
+                checkAllComplete();
+            } catch (e) {
+                console.error('IP check error:', e);
+                checkAllComplete();
+            }
+        }
+
+        function analyzeBrowser() {
+            setTimeout(() => {
+                const el = document.getElementById('browserCheck');
+                el.classList.add('passed');
+                el.querySelector('span').textContent = 'Browser verified';
+                el.querySelector('.check-icon i').className = 'fas fa-check';
+                
+                console.log('Browser check complete');
+                checkAllComplete();
+            }, 1400);
+        }
+
+        function checkAllComplete() {
+            const checks = document.querySelectorAll('.check-item');
+            let completed = 0;
+            checks.forEach(check => {
+                if (check.classList.contains('passed') || check.classList.contains('failed')) {
+                    completed++;
+                }
+            });
+
+            if (completed === 4 && !allChecksComplete) {
+                allChecksComplete = true;
+                console.log('All checks complete, showing CAPTCHA');
+                showCaptcha();
+            }
+        }
+
+        async function showCaptcha() {
+            const btn = document.getElementById('submitBtn');
+            
+            // Check if CAPTCHA is required from server
+            try {
+                const response = await fetch('/api/captcha-required');
+                const data = await response.json();
+                
+                if (!data.required) {
+                    // CAPTCHA not required - enable button immediately
+                    console.log('CAPTCHA not required, enabling button');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-shield-alt"></i> Verify Identity';
+                    captchaToken = 'not-required';
+                    return;
+                }
+            } catch (e) {
+                console.error('Failed to check CAPTCHA requirement:', e);
+                // On error, enable button anyway
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-shield-alt"></i> Verify Identity';
+                captchaToken = 'check-failed';
+                return;
+            }
+            
+            // CAPTCHA is required
+            const challengeBox = document.getElementById('challengeBox');
+            challengeBox.style.display = 'block';
+            btn.innerHTML = '<i class="fas fa-lock"></i> Complete CAPTCHA to continue';
+
+            // Wait for Turnstile to load
+            const waitForTurnstile = setInterval(() => {
+                if (window.turnstile && turnstileLoaded) {
+                    clearInterval(waitForTurnstile);
+                    try {
+                        turnstileWidget = window.turnstile.render('#turnstileContainer', {
+                            sitekey: '0x4AAAAAAAzfGUPD0wlf75Yn',
+                            callback: window.onCaptchaSuccess,
+                            theme: 'dark',
+                            size: 'normal'
+                        });
+                        console.log('Turnstile widget rendered');
+                    } catch (e) {
+                        console.error('Turnstile render error:', e);
+                        // If CAPTCHA fails, enable button anyway
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-shield-alt"></i> Verify Identity (CAPTCHA disabled)';
+                        captchaToken = 'disabled';
+                    }
+                }
+            }, 100);
+
+            // Timeout fallback (10 seconds)
+            setTimeout(() => {
+                if (!captchaToken && !turnstileWidget) {
+                    clearInterval(waitForTurnstile);
+                    console.warn('CAPTCHA timeout, enabling button');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-shield-alt"></i> Verify Identity';
+                    captchaToken = 'timeout';
+                }
+            }, 10000);
+        }
+
+        // Initialize
+        loadUserData();
+        initFingerprint();
+        checkIPReputation();
+        analyzeBrowser();
+
+        // Form submission
+        document.getElementById('verifyForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            const status = document.getElementById('status');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+
+            const payload = {
+                token: document.getElementById('token').value,
+                fingerprint: document.getElementById('fingerprint').value,
+                captcha_token: document.getElementById('captcha_token').value || captchaToken,
+                user_agent: navigator.userAgent,
+                screen_resolution: `${screen.width}x${screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            };
+
+            try {
+                const res = await fetch('/api/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+
+                status.style.display = 'block';
+                if (result.success) {
+                    status.className = 'status success';
+                    status.innerHTML = `<i class="fas fa-check-circle"></i> ${result.message}`;
+                    setTimeout(() => window.location.href = '/success.html', 2000);
+                } else {
+                    status.className = 'status error';
+                    status.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${result.error}`;
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-shield-alt"></i> Try Again';
+                }
+            } catch (err) {
+                console.error('Verification error:', err);
+                status.style.display = 'block';
+                status.className = 'status error';
+                status.innerHTML = '<i class="fas fa-exclamation-circle"></i> Connection error';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-shield-alt"></i> Try Again';
+            }
+        });
+    </script>
+</body>
+</html>
